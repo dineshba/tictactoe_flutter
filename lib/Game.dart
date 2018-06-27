@@ -1,3 +1,5 @@
+import 'package:dart_range/dart_range.dart';
+
 class Game {
   Player playerOne;
   Player playerTwo;
@@ -6,33 +8,33 @@ class Game {
 
   List<Player> values;
 
-  Game(this.playerOne, this.playerTwo) {
-    this.values = [
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-    ];
+  int numberOfRowColumns;
+
+  Game(this.playerOne, this.playerTwo, this.numberOfRowColumns) {
+    this.values = resetValues();
   }
 
-  setPlayer(int player, int position) {}
+  List<Player> resetValues() {
+    Player mapper(int) {
+      return null;
+    }
+
+    return range(0, numberOfRowColumns * numberOfRowColumns)
+        .map(mapper)
+        .toList();
+  }
 
   togglePlayerOneTurn() {
     this.isPlayerOneTurn = !this.isPlayerOneTurn;
   }
 
-  bool set(int row, int column) {
-    var i = (row * 3) + column;
-    if (!(hasValue(i) || gameOver)) {
+  bool setPlayer(int row, int column) {
+    var index = (row * numberOfRowColumns) + column;
+    if (!(hasValue(index) || gameOver)) {
       if (this.isPlayerOneTurn) {
-        this.values[i] = playerOne;
+        this.values[index] = playerOne;
       } else {
-        this.values[i] = playerTwo;
+        this.values[index] = playerTwo;
       }
       togglePlayerOneTurn();
       return true;
@@ -41,17 +43,15 @@ class Game {
   }
 
   List<Player> getForRow(int row) {
-    var start = row * 3;
-    var range = this.values.getRange(start, start + 3);
+    var start = row * numberOfRowColumns;
+    var range = this.values.getRange(start, start + numberOfRowColumns);
     return range.toList();
   }
 
   List<Player> getForColumn(int column) {
-    return [
-      this.values[column],
-      this.values[column + 3],
-      this.values[column + 6]
-    ];
+    return range(0, numberOfRowColumns).map((index) {
+      return this.values[column + (index * numberOfRowColumns)];
+    }).toList();
   }
 
   bool hasValue(int i) => this.values[i] != null;
@@ -79,62 +79,59 @@ class Game {
 
   bool horizontalCheck(Player player) {
     bool win = false;
-    [0, 1, 2].forEach((row) {
+    range(0, numberOfRowColumns).forEach((row) {
       if (!win) {
-        win =
-            this.getForRow(row).where((p) => player == p).toList().length == 3;
+        win = this.getForRow(row).where((p) => player == p).toList().length ==
+            numberOfRowColumns;
       }
     });
     return win;
   }
 
   void restart() {
-    this.values = [
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-    ];
+    this.values = resetValues();
     this.gameOver = false;
     this.isPlayerOneTurn = true;
   }
 
   bool verticalCheck(Player player) {
     bool win = false;
-    [0, 1, 2].forEach((column) {
+    range(0, numberOfRowColumns).forEach((column) {
       if (!win) {
         win = this
                 .getForColumn(column)
                 .where((p) => player == p)
                 .toList()
                 .length ==
-            3;
+            numberOfRowColumns;
       }
     });
     return win;
   }
 
   bool diagonalCheck(Player player) {
-    var diagonal = [0, 4, 8]
+    var diagonal = range(0, numberOfRowColumns)
+            .map((index) => index + (index * numberOfRowColumns))
             .map((index) => this.values[index])
-            .toList()
             .where((p) => player == p)
-            .toList()
             .length ==
-        3;
-    var crossDiagonal = [2, 4, 6]
+        numberOfRowColumns;
+    var crossDiagonal = range(0, numberOfRowColumns)
+            .map((index) => ((index + 1) * numberOfRowColumns) - (index + 1))
             .map((index) => this.values[index])
-            .toList()
             .where((p) => player == p)
-            .toList()
             .length ==
-        3;
+        numberOfRowColumns;
     return diagonal || crossDiagonal;
+  }
+
+  String playerString({int atRow, int atColumn}) {
+    var player = this.values[atRow * numberOfRowColumns + atColumn];
+    if (player == null) {
+      return "";
+    } else {
+      return player.symbol;
+    }
   }
 }
 

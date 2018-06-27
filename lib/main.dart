@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tictactoe/Game.dart';
 import 'package:tictactoe/RowView.dart';
+import 'package:dart_range/dart_range.dart';
 
 void main() => runApp(new MyApp());
 
@@ -26,7 +27,7 @@ class GameView extends StatefulWidget {
   _GameView createState() {
     var player1 = new Player("player one", "X");
     var player2 = new Player("player two", "O");
-    var game = new Game(player1, player2);
+    var game = new Game(player1, player2, 4);
     return new _GameView(game);
   }
 }
@@ -53,18 +54,21 @@ class _GameView extends State<GameView> {
       onPressed: () => restartGame(),
       child: new Text("Restart"),
     );
-    return new ListView(children: <Widget>[
-      new RowView(game.getForRow(0), 0, callback),
-      new RowView(game.getForRow(1), 1, callback),
-      new RowView(game.getForRow(2), 2, callback),
-      restartButton
-    ]);
+    List<Widget> rows = [];
+    inclusiveRange(0, game.numberOfRowColumns).forEach((index) {
+      if (index != game.numberOfRowColumns) {
+        rows.add(new RowView(game, index, callback));
+      } else {
+        rows.add(restartButton);
+      }
+    });
+    return new ListView(children: rows);
   }
 
   String callback(row, column) {
     String winCheck;
     setState(() {
-      var success = game.set(row, column);
+      var success = game.setPlayer(row, column);
       if (success) {
         winCheck = game.winCheck();
       }
